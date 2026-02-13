@@ -5,7 +5,7 @@ setup(
     version="0.1.0",
     description="Favoriot ML Inference SDK",
     packages=find_packages(),
-    python_requires=">=3.12",
+    python_requires=">=3.8",
     install_requires=[
         "numpy",
         "joblib",
@@ -13,4 +13,3 @@ setup(
         "onnxruntime"
     ]
 )
-
