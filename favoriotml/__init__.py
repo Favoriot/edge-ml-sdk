@@ -13,7 +13,6 @@ from .inference import EdgeInference
 
 __all__ = [
     "ModelConfig",
-    "MQTTConfig",
     "ModelLoader",
     "Preprocessor",
     "EdgeInference",
