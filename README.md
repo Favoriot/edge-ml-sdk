@@ -34,7 +34,7 @@ This SDK allows you to run "offline intelligence," processing raw sensor payload
   - Step 2: Pull from GitHub
 
   ```bash
-        git clone https://github.com/favoriot/edge-ml-sdk.git
+        git clone https://github.com/Favoriot/edge-ml-sdk.git
         cd edge-ml-sdk
 
   ```
@@ -133,3 +133,4 @@ Monitor your edge device performance with built-in metrics:
 
 - 💻 GitHub Repository:  
   https://github.com/Favoriot
+
