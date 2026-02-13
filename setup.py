@@ -10,7 +10,7 @@ setup(
         "numpy",
         "joblib",
         "scikit-learn",
-        "onnxruntime",
-        "paho-mqtt"
-    ],
+        "onnxruntime"
+    ]
 )
+
