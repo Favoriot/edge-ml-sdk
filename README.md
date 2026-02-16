@@ -15,7 +15,7 @@ This SDK allows you to run "offline intelligence," processing raw sensor payload
 ## 📦 Installation
 
 ### Requirements:
- - Python 3.9+
+ - Python 3.8+
  - numpy, scikit-learn, joblib, onnxruntime
 
  1. Prepare the Environment
@@ -134,5 +134,6 @@ Monitor your edge device performance with built-in metrics:
 
 - 💻 GitHub Repository:  
   https://github.com/Favoriot
+
 
 
