@@ -1,12 +1,64 @@
+import json
 import joblib
 import onnxruntime as ort
 from typing import Any, Optional, Tuple, Dict
+from .preprocessor import JSONStandardScaler, JSONLabelEncoder
+
 
 class ModelLoader:
     def __init__(self, model_path: str, model_type: str, preprocessor_path: Optional[str] = None):
         self.model_path = model_path
         self.model_type = model_type
         self.preprocessor_path = preprocessor_path  # ONLY preprocessor path (no scaler_path)
+    
+    def _load_json_preprocessor(self, path: str) -> Tuple[Dict, Any, Dict, list]:
+        """Load and clean JSON preprocessor artifact"""
+        with open(path, 'r') as f:
+            raw_artifact = json.load(f)
+        
+        # Clean whitespace from ALL keys/values recursively
+        def clean_dict(d):
+            if isinstance(d, dict):
+                return {k.strip(): clean_dict(v) for k, v in d.items()}
+            elif isinstance(d, list):
+                return [clean_dict(v) for v in d]
+            elif isinstance(d, str):
+                return d.strip()
+            return d
+        
+        artifact = clean_dict(raw_artifact)
+        
+        # Extract feature order
+        feature_order = artifact.get("feature_order", [])
+        
+        # Build categorical encoders
+        categorical_encoders = {}
+        cat_encs_raw = artifact.get("categorical_encoders", {})
+        for feat_name, enc_info in cat_encs_raw.items():
+            clean_feat = feat_name.strip()
+            if enc_info.get("type") == "label" and "mapping" in enc_info:
+                categorical_encoders[clean_feat] = {
+                    "type": "label",
+                    "encoder": JSONLabelEncoder(enc_info["mapping"])
+                }
+        
+        # Reconstruct scaler from params
+        scaler = None
+        scaler_info = artifact.get("scaler", {})
+        if scaler_info.get("type") == "standard":
+            scaler = JSONStandardScaler(
+                mean=scaler_info.get("mean"),
+                scale=scaler_info.get("scale")
+            )
+        
+        feature_config = {"feature_order": feature_order}
+        
+        print(f"✓ Loaded JSON preprocessor: {len(categorical_encoders)} categorical encoders")
+        print(f"  - Features: {feature_order}")
+        if scaler:
+            print(f"  - Scaler: StandardScaler (reconstructed from params)")
+        
+        return categorical_encoders, scaler, feature_config, feature_order
 
     def load(self) -> Tuple[Any, Optional[Any], Optional[Any], str, Dict, Optional[Any]]:
         """
@@ -19,21 +71,29 @@ class ModelLoader:
         model_name = ""
         categorical_encoders = {}
         feature_config = {}
+        feature_order = []
 
         # Load preprocessor artifact FIRST (contains encoders + scaler + metadata)
         if self.preprocessor_path:
             try:
-                artifact = joblib.load(self.preprocessor_path)
-                categorical_encoders = artifact.get('categorical_encoders', {})
-                scaler = artifact.get('scaler')  # Scaler comes ONLY from preprocessor
-                feature_config = artifact.get('feature_config', {})
-                
-                print(f"✓ Loaded preprocessor artifact: {len(categorical_encoders)} categorical encoders")
-                if categorical_encoders:
-                    cat_feats = list(categorical_encoders.keys())
-                    print(f"  - Categorical features: {cat_feats}")
-                if scaler is not None:
-                    print(f"  - Scaler: {scaler.__class__.__name__}")
+                if self.preprocessor_path.endswith('.json'):
+                    # LOAD FROM JSON (Python 3.12 safe)
+                    categorical_encoders, scaler, feature_config, feature_order = \
+                        self._load_json_preprocessor(self.preprocessor_path)
+                else:
+                    # Fallback to joblib (legacy support)
+                    artifact = joblib.load(self.preprocessor_path)
+                    categorical_encoders = artifact.get('categorical_encoders', {})
+                    scaler = artifact.get('scaler')   # Scaler comes ONLY from preprocessor
+                    feature_config = artifact.get('feature_config', {})
+                    feature_order = feature_config.get('feature_order', [])
+                    
+                    print(f"✓ Loaded joblib preprocessor artifact: {len(categorical_encoders)} categorical encoders")
+                    if categorical_encoders:
+                        cat_feats = list(categorical_encoders.keys())
+                        print(f"  - Categorical features: {cat_feats}")
+                    if scaler is not None:
+                        print(f"  - Scaler: {scaler.__class__.__name__}")
             except Exception as e:
                 raise RuntimeError(f"Failed to load preprocessor artifact '{self.preprocessor_path}': {e}")
         else:

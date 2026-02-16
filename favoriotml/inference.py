@@ -4,6 +4,7 @@ from typing import Any, Optional, Dict
 from sklearn.metrics.pairwise import pairwise_distances
 from .preprocessor import Preprocessor
 
+
 class EdgeInference:
     def __init__(
         self,
@@ -17,9 +18,9 @@ class EdgeInference:
         model_name: str = ""
     ):
         self.model = model
-        self.model_type = model_type
-        self.task_type = task_type
-        self.feature_order = feature_order
+        self.model_type = model_type.strip()
+        self.task_type = task_type.strip()
+        self.feature_order = [f.strip() for f in feature_order]
         self.scaler = scaler                    # Scaler from preprocessor (not standalone file)
         self.label_encoder = label_encoder
         self.categorical_encoders = categorical_encoders or {}
@@ -30,9 +31,9 @@ class EdgeInference:
         
         # Debug info
         if self.categorical_encoders:
-            print(f"Intialized with {len(self.categorical_encoders)} categorical encoders: {list(self.categorical_encoders.keys())}")
+            print(f"Initialized with {len(self.categorical_encoders)} categorical encoders: {list(self.categorical_encoders.keys())}")
         if self.scaler is not None:
-            print(f"Intialized with scaler: {self.scaler.__class__.__name__}")
+            print(f"Initialized with scaler: {self.scaler.__class__.__name__}")
 
     def _dbscan_assign_label(self, model, new_data):
         """Custom DBSCAN label assignment for new samples."""
