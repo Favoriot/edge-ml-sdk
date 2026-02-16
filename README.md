@@ -1,52 +1,40 @@
-## Favoriot Edge ML SDK
+# Favoriot Edge ML SDK
 
-The **Favoriot Edge ML SDK** is a lightweight, high-performance Python library specifically designed for Favoriot platform users. It enables seamless local machine learning inference on edge gateways, industrial PCs, and IoT devices by providing a unified interface for **Scikit-Learn (Joblib)** and **ONNX** models.
+The Favoriot Edge ML SDK is a lightweight, high-performance Python library designed for edge deployments on gateways, industrial PCs, and IoT devices. It enables seamless **offline inference** for Scikit-Learn (Joblib) and ONNX models with built-in preprocessing—now fully compatible with **Python 3.12+** using secure JSON artifacts instead of pickle-based formats.
 
-This SDK allows you to run "offline intelligence," processing raw sensor payloads directly at the edge without requiring constant cloud connectivity.
+> ✅ **Production-ready**: No unsafe pickle dependencies • Whitespace-robust • ONNX-optimized • Backward compatible
 
-## 🚀 Features
-- Unified Inference API: Simple predict() and predict_from_payload() methods support Classification, Regression, and Clustering tasks.
-- Built-in Preprocessing: Automatically handles StandardScaler, MinMaxScaler, LabelEncoder, and OneHotEncoder through a dedicated preprocessor artifact.
-- Favoriot Optimized: Designed to map raw sensor JSON payloads directly to model-ready tensors based on your Favoriot training configuration.
-- DBSCAN Support: Includes custom label assignment logic for DBSCAN models, which typically lack a standard .predict() method for new samples.
-- Dual-Engine Support: Run legacy .joblib models or high-performance .onnx runtimes.
-- Performance Tracking: Built-in timing breakdown to distinguish between preprocessing latency and model execution time.
+## 🚀 Key Features
+
+| Feature | Description |
+|--------|-------------|
+| **Python 3.12+ Compatible** | Uses JSON preprocessor artifacts instead of pickle/joblib for secure cross-version deployment |
+| **Dual Format Support** | Loads preprocessing artifacts from **both `.json` (recommended)** and `.joblib` formats |
+| **Whitespace-Robust Parsing** | Automatically strips inconsistent spacing in feature names/values (e.g., `"User_Type "` → `"User_Type"`) |
+| **ONNX-Optimized** | Native float32 handling, automatic dtype conversion, and production-grade latency tracking |
+| **Unified Preprocessing** | Single artifact contains scalers, categorical encoders, and feature metadata |
+| **DBSCAN Support** | Custom label assignment logic for models without standard `.predict()` methods |
+| **Zero-Config Encoding** | Raw categorical strings (`"Visitor"`, `"High"`) accepted directly—no manual encoding required |
 
 ## 📦 Installation
 
-### Requirements:
- - Python 3.8+
- - numpy, scikit-learn, joblib, onnxruntime
+### Requirements
+- Python 3.9+ (fully tested on 3.12+)
+- Core: `numpy`, `scikit-learn`, `joblib`
+- ONNX (optional but recommended): `onnxruntime`
 
- 1. Prepare the Environment
-  - It is highly recommended to use a virtual environment to avoid dependency conflicts with other projects.
-  - Step 1: Create and activate a virtual environment
-  ```bash
-        # Create a virtual environment
-        python -m venv favoriot-ml-inference
+### Setup
+```bash
+# Create virtual environment (recommended)
+python -m venv favoriot-ml-env
+source favoriot-ml-env/bin/activate  # Linux/macOS
+# favoriot-ml-env\Scripts\activate   # Windows
 
-        # Activate the environment
-        # On Windows:
-        favoriot-ml-inference\Scripts\activate
-        # On Linux/macOS:
-        source favoriot-ml-inference/bin/activate
-  ```
-  - Step 2: Pull from GitHub
-
-  ```bash
-        cd favoriot-ml-inference
-        git clone https://github.com/Favoriot/edge-ml-sdk.git
-        cd edge-ml-sdk
-
-  ```
-  2. Install from Source
-  - Navigate to the root directory where the setup.py file is located and run the following command:
-  ```bash
-        # Install in regular mode
-        pip install .
-        # OR install in editable mode (useful if you plan to modify the SDK code)
-        pip install -e .
-  ```
+# Install SDK
+git clone https://github.com/Favoriot/edge-ml-sdk.git
+cd edge-ml-env
+pip install -e .
+```
 
   3. Verify Installation
   - After installation, you can verify that the favoriotml package is available by listing your installed packages:
@@ -58,7 +46,7 @@ This SDK allows you to run "offline intelligence," processing raw sensor payload
 The ModelConfig class is used to validate your settings. Note: You must follow the exact configuration used during your Favoriot ML training.
 
 - **model_path**: Path to your .pkl, .joblib, or .onnx file.
-- **preprocessor_path**: Path to the preprocessor.joblib artifact (this contains all scalers and encoders; no separate scaler path is needed).
+- **preprocessor_path**: Path to the preprocessor.json or joblib(support python3.12++) artifact (this contains all scalers and encoders; no separate scaler path is needed).
 - **model_type**: Either "joblib" or "onnx".
 - **task_type**: Must be one of "classification", "regression", or "clustering".
 - **feature_order**: A list of features (e.g., ["temp", "humidity"]) in the exact order used during Favoriot training.
@@ -74,7 +62,7 @@ from favoriotml.inference import EdgeInference
 # 1. Setup Configuration (must match Favoriot training configuration)
 config = ModelConfig(
     model_path=r"path/to/your/model.pkl",
-    preprocessor_path=r"path/to/your/preprocessor.joblib", # Consolidated artifact
+    preprocessor_path=r"path/to/your/preprocessor.json", # Consolidated artifact
     model_type="joblib",
     task_type="clustering",
     feature_order=["User_Type", "Nearby_Traffic_Level"]
@@ -134,6 +122,3 @@ Monitor your edge device performance with built-in metrics:
 
 - 💻 GitHub Repository:  
   https://github.com/Favoriot
-
-
-
